@@ -1,106 +1,120 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createPost } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { fetchPost } from "@/lib/api";
+import { Post, PostListItem } from "@/types/post";
 
-export default function WritePage() {
+export default function PostDetailPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const postId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [post, setPost] = useState<Post | PostListItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (isSubmitting) {
+  useEffect(() => {
+    if (!postId) {
+      setError("게시글이 없습니다.");
+      setLoading(false);
       return;
     }
 
-    if (!title.trim() || !content.trim() || !author.trim()) {
-      alert("모든 항목을 입력해주세요.");
-      return;
-    }
+    const loadPost = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchPost(String(postId));
 
-    setIsSubmitting(true);
+        if (!data) {
+          setError("게시글이 없습니다.");
+          setPost(null);
+          return;
+        }
 
-    try {
-      await createPost({ title, content, author });
-      router.push("/community");
-    } catch {
-      alert("게시글 작성에 실패했습니다.");
-      setIsSubmitting(false);
-    }
-  };
+        setPost(data);
+      } catch {
+        setError("게시글이 없습니다.");
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPost();
+  }, [postId]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+        <p style={{ marginBottom: "16px", color: "#d32f2f" }}>
+          {error ?? "게시글이 없습니다."}
+        </p>
+        <button
+          onClick={() => router.push("/community")}
+          style={{
+            padding: "8px 14px",
+            border: "1px solid #ccc",
+            borderRadius: "6px",
+            backgroundColor: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          ← 목록으로
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "20px" }}>글 작성</h1>
-
       <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>제목</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="제목을 입력하세요"
+        <button
+          onClick={() => router.push("/community")}
           style={{
-            width: "100%",
-            padding: "10px",
+            padding: "8px 14px",
             border: "1px solid #ccc",
             borderRadius: "6px",
+            backgroundColor: "#fff",
+            cursor: "pointer",
           }}
-        />
+        >
+          ← 목록으로
+        </button>
       </div>
 
-      <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>작성자</label>
-        <input
-          type="text"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          placeholder="작성자를 입력하세요"
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-          }}
-        />
+      <h1 style={{ marginBottom: "12px" }}>{post.title}</h1>
+
+      <div style={{ fontSize: "14px", color: "#666", marginBottom: "16px" }}>
+        <span>작성자: {post.author}</span>
+        <span style={{ marginLeft: "12px" }}>
+          작성일: {new Date(post.createdAt).toLocaleString()}
+        </span>
+        <span style={{ marginLeft: "12px" }}>좋아요: {post.likes}</span>
+        <span style={{ marginLeft: "12px" }}>
+          댓글: {"commentCount" in post ? post.commentCount : post.comments.length}
+        </span>
       </div>
 
-      <div style={{ marginBottom: "16px" }}>
-        <label style={{ display: "block", marginBottom: "8px" }}>내용</label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="내용을 입력하세요"
-          rows={10}
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "6px",
-            resize: "none",
-          }}
-        />
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={isSubmitting}
+      <div
         style={{
-          padding: "10px 18px",
-          backgroundColor: "#0070f3",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: isSubmitting ? "not-allowed" : "pointer",
-          opacity: isSubmitting ? 0.7 : 1,
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          padding: "16px",
+          lineHeight: 1.6,
+          whiteSpace: "pre-wrap",
         }}
       >
-        {isSubmitting ? "작성 중..." : "작성"}
-      </button>
+        {post.content}
+      </div>
     </div>
   );
 }
