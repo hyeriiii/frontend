@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Post } from "@/types/post";
+import { PostListItem } from "@/types/post";
 
 interface PostCardProps {
-  post: Post;
+  post: PostListItem;
 }
 
 export default function PostCard({ post }: PostCardProps) {
@@ -18,18 +18,23 @@ export default function PostCard({ post }: PostCardProps) {
     <div
       onClick={handleClick}
       style={{
-        border: "1px solid #eee",
-        borderRadius: 8,
-        padding: 16,
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        padding: "16px",
+        marginBottom: "12px",
         cursor: "pointer",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        marginBottom: 12,
+        backgroundColor: "#fff",
       }}
     >
-      <h2>{post.title}</h2>
-      <p>작성자: {post.author}</p>
-      <p>작성일: {post.createdAt}</p>
-      <p>👍 {post.likes} 💬 {post.comments.length}</p>
+      <h2 style={{ margin: "0 0 8px 0" }}>{post.title}</h2>
+
+      <p style={{ margin: "0 0 8px 0", color: "#555" }}>{post.content}</p>
+
+      <div style={{ fontSize: "14px", color: "#777" }}>
+        <span>작성자: {post.author}</span>
+        <span style={{ marginLeft: "12px" }}>좋아요: {post.likes}</span>
+        <span style={{ marginLeft: "12px" }}>댓글: {post.commentCount}</span>
+      </div>
     </div>
   );
 }

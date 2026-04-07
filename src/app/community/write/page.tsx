@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getPosts, savePosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { createPost } from "@/lib/api";
 
 export default function WritePage() {
   const router = useRouter();
@@ -11,28 +10,27 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!title.trim() || !content.trim() || !author.trim()) {
-      alert("제목, 작성자, 내용을 모두 입력해주세요.");
+  const handleSubmit = async () => {
+    if (isSubmitting) {
       return;
     }
 
-    const newPost: Post = {
-      id: Date.now().toString(),
-      title: title,
-      content: content,
-      author: author,
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      comments: [],
-    };
+    if (!title.trim() || !content.trim() || !author.trim()) {
+      alert("모든 항목을 입력해주세요.");
+      return;
+    }
 
-    const posts = getPosts();
-    const updatedPosts = [newPost, ...posts];
-    savePosts(updatedPosts);
+    setIsSubmitting(true);
 
-    router.push("/community");
+    try {
+      await createPost({ title, content, author });
+      router.push("/community");
+    } catch {
+      alert("게시글 작성에 실패했습니다.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,16 +88,18 @@ export default function WritePage() {
 
       <button
         onClick={handleSubmit}
+        disabled={isSubmitting}
         style={{
           padding: "10px 18px",
           backgroundColor: "#0070f3",
           color: "white",
           border: "none",
           borderRadius: "6px",
-          cursor: "pointer",
+          cursor: isSubmitting ? "not-allowed" : "pointer",
+          opacity: isSubmitting ? 0.7 : 1,
         }}
       >
-        작성
+        {isSubmitting ? "작성 중..." : "작성"}
       </button>
     </div>
   );

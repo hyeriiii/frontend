@@ -3,19 +3,36 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PostCard from "@/components/PostCard";
-import { getPosts } from "@/lib/mockData";
-import { Post } from "@/types/post";
+import { fetchPosts } from "@/lib/api";
+import { PostListItem } from "@/types/post";
 
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
   const router = useRouter();
 
+  const [posts, setPosts] = useState<PostListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    setPosts(getPosts());
+    const loadPosts = async () => {
+      try {
+        const data = await fetchPosts();
+        setPosts(data);
+      } catch (err) {
+        setError("글을 불러오지 못했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
   }, []);
 
+  if (loading) return <div style={{ padding: "20px" }}>로딩 중...</div>;
+  if (error) return <div style={{ padding: "20px", color: "red" }}>{error}</div>;
+
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
       <div
         style={{
           display: "flex",
@@ -25,6 +42,7 @@ export default function CommunityPage() {
         }}
       >
         <h1>커뮤니티</h1>
+
         <button
           onClick={() => router.push("/community/write")}
           style={{
