@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchPost } from "@/lib/api";
+import { fetchPost, toggleLike } from "@/lib/api";
 import { Post, PostListItem } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -12,6 +12,7 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<Post | PostListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     if (!postId) {
@@ -43,6 +44,31 @@ export default function PostDetailPage() {
 
     loadPost();
   }, [postId]);
+
+  const handleLike = async () => {
+    if (!postId || isLiking || !post) {
+      return;
+    }
+
+    try {
+      setIsLiking(true);
+      const updatedPost = await toggleLike(String(postId));
+      setPost((prevPost) => {
+        if (!prevPost) {
+          return updatedPost;
+        }
+
+        return {
+          ...updatedPost,
+          likes: Math.max(updatedPost.likes, prevPost.likes + 1),
+        };
+      });
+    } catch {
+      alert("좋아요 처리에 실패했습니다.");
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -104,6 +130,23 @@ export default function PostDetailPage() {
         </span>
       </div>
 
+      <button
+        onClick={handleLike}
+        disabled={isLiking}
+        style={{
+          marginBottom: "16px",
+          padding: "10px 16px",
+          borderRadius: "8px",
+          border: "none",
+          backgroundColor: isLiking ? "#90caf9" : "#1976d2",
+          color: "#fff",
+          fontWeight: 600,
+          cursor: isLiking ? "not-allowed" : "pointer",
+        }}
+      >
+        {isLiking ? "처리 중..." : `좋아요 ${post.likes}`}
+      </button>
+s
       <div
         style={{
           border: "1px solid #ddd",
