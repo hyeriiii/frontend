@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { fetchPost, toggleLike } from "@/lib/api";
+import { deletePost, fetchPost, toggleLike } from "@/lib/api";
 import { Post, PostListItem } from "@/types/post";
 
 export default function PostDetailPage() {
@@ -13,6 +13,7 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiking, setIsLiking] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!postId) {
@@ -70,6 +71,26 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!postId || isDeleting) {
+      return;
+    }
+
+    const confirmed = confirm("정말 삭제하시겠습니까?");
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deletePost(String(postId));
+      router.push("/community");
+    } catch {
+      alert("삭제에 실패했습니다.");
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
@@ -102,7 +123,7 @@ export default function PostDetailPage() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <button
           onClick={() => router.push("/community")}
           style={{
@@ -114,6 +135,20 @@ export default function PostDetailPage() {
           }}
         >
           ← 목록으로
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          style={{
+            padding: "8px 14px",
+            border: "none",
+            borderRadius: "6px",
+            backgroundColor: isDeleting ? "#ef9a9a" : "#d32f2f",
+            color: "#fff",
+            cursor: isDeleting ? "not-allowed" : "pointer",
+          }}
+        >
+          {isDeleting ? "삭제 중..." : "삭제"}
         </button>
       </div>
 
@@ -146,7 +181,7 @@ export default function PostDetailPage() {
       >
         {isLiking ? "처리 중..." : `좋아요 ${post.likes}`}
       </button>
-s
+
       <div
         style={{
           border: "1px solid #ddd",
