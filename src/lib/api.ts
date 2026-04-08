@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Post, PostListItem } from "@/types/post";
+import { TokenResponse, User } from "@/types/auth";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -7,6 +8,8 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+const AUTH_API_BASE_URL = "https://study-community-backend.vercel.app/api";
 
 const toPostArray = (data: unknown): PostListItem[] => {
   if (Array.isArray(data)) {
@@ -92,4 +95,77 @@ export const createComment = async (
 export const deleteComment = async (commentId: string) => {
   const res = await api.delete(`/comments/${commentId}`);
   return res.data;
+};
+
+export const register = async (data: {
+  username: string;
+  email: string;
+  password: string;
+}): Promise<TokenResponse> => {
+  const response = await fetch(`${AUTH_API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof result?.message === "string"
+        ? result.message
+        : "회원가입에 실패했습니다."
+    );
+  }
+
+  return result as TokenResponse;
+};
+
+export const login = async (data: {
+  email: string;
+  password: string;
+}): Promise<TokenResponse> => {
+  const response = await fetch(`${AUTH_API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof result?.message === "string"
+        ? result.message
+        : "로그인에 실패했습니다."
+    );
+  }
+
+  return result as TokenResponse;
+};
+
+export const getMe = async (token: string): Promise<User> => {
+  const response = await fetch(`${AUTH_API_BASE_URL}/auth/me`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      typeof result?.message === "string"
+        ? result.message
+        : "사용자 정보를 불러오지 못했습니다."
+    );
+  }
+
+  return result as User;
 };
