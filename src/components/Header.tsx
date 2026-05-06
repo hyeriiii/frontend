@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function Header() {
   const router = useRouter();
+
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const logout = useAuthStore((state) => state.logout);
@@ -41,22 +42,64 @@ export default function Header() {
           alignItems: "center",
         }}
       >
-        <Link
-          href="/"
+        <div
           style={{
-            color: "#f5f5f5",
-            textDecoration: "none",
-            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
           }}
         >
-          Five-set
-        </Link>
+          <Link
+            href="/"
+            style={{
+              color: "#f5f5f5",
+              textDecoration: "none",
+              fontWeight: 700,
+            }}
+          >
+            Five-set
+          </Link>
+
+          <Link
+            href="/community"
+            style={{
+              color: "#d4d4d4",
+              textDecoration: "none",
+              fontSize: "14px",
+            }}
+          >
+            커뮤니티
+          </Link>
+
+          <Link
+            href="/reservation"
+            style={{
+              color: "#d4d4d4",
+              textDecoration: "none",
+              fontSize: "14px",
+            }}
+          >
+            스터디룸 예약
+          </Link>
+        </div>
 
         {isLoggedIn && user ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ color: "#d4d4d4", fontSize: "14px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span
+              style={{
+                color: "#d4d4d4",
+                fontSize: "14px",
+              }}
+            >
               {user.username}
             </span>
+
             <button
               onClick={handleLogout}
               style={{
