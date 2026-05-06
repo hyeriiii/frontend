@@ -73,16 +73,7 @@ export default function PostDetailPage() {
     try {
       setIsLiking(true);
       const updatedPost = await toggleLike(String(postId));
-      setPost((prevPost) => {
-        if (!prevPost) {
-          return updatedPost;
-        }
-
-        return {
-          ...updatedPost,
-          likes: Math.max(updatedPost.likes, prevPost.likes + 1),
-        };
-      });
+      setPost(updatedPost);
     } catch {
       alert("좋아요 처리에 실패했습니다.");
     } finally {
@@ -338,7 +329,11 @@ export default function PostDetailPage() {
             <CommentItem
               key={comment.id}
               comment={comment}
-              onDelete={isLoggedIn ? handleDeleteComment : undefined}
+              onDelete={
+                isLoggedIn && comment.author === user?.username
+                  ? handleDeleteComment
+                  : undefined
+              }
               isDeleting={deletingCommentId === comment.id}
             />
           ))
